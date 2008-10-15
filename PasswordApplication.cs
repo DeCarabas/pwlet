@@ -6,9 +6,12 @@ namespace PwLet
     using System.Security.Cryptography;
     using System.Text;
     using System.Windows.Forms;
+    using System.Runtime.InteropServices;
 
     class PasswordApplication : ApplicationContext
     {
+        const int ERROR_HOTKEY_ALREADY_REGISTERED = unchecked((int)0x80070581);
+
         GlobalHotKey hotKey;
         PasswordForm form;
         NotifyIcon icon;
@@ -23,11 +26,11 @@ namespace PwLet
                     applicationIcon = Icon.ExtractAssociatedIcon(
                         typeof(PasswordApplication).Assembly.Location);
                 }
-                
+
                 return applicationIcon;
             }
         }
-        
+
         PasswordApplication()
         {
             MenuItem getPasswordMenuItem = new MenuItem();
@@ -35,12 +38,12 @@ namespace PwLet
             getPasswordMenuItem.Text = "&Get Password...";
             getPasswordMenuItem.DefaultItem = true;
             getPasswordMenuItem.Click += GetPasswordHandler;
-            
+
             MenuItem optionsMenuItem = new MenuItem();
             optionsMenuItem.Index = 1;
             optionsMenuItem.Text = "&Options...";
             optionsMenuItem.Click += OptionsMenuItemHandler;
-            
+
             MenuItem exitMenuItem = new MenuItem();
             exitMenuItem.Index = 2;
             exitMenuItem.Text = "E&xit";
@@ -61,8 +64,25 @@ namespace PwLet
             this.icon.Text = "Password Generator";
             this.icon.Visible = true;
 
-            this.hotKey = new GlobalHotKey(KeyModifiers.Windows, Keys.P);
-            this.hotKey.Pressed += GetPasswordHandler;
+            try
+            {
+                this.hotKey = new GlobalHotKey(KeyModifiers.Windows, Keys.P);
+                this.hotKey.Pressed += GetPasswordHandler;
+            }
+            catch (COMException e)
+            {
+                // This can happen because the hotkey is in use and so we just need to swallow it for 
+                // now. (Perhaps it should be configurable, but I'm too lazy to implement that feature.)
+                //
+                if (e.ErrorCode != ERROR_HOTKEY_ALREADY_REGISTERED) { throw; }
+                this.hotKey = null;
+                this.icon.ShowBalloonTip(
+                    0,
+                    "Error Registering Shortcut Key",
+                    "The shortcut key for this program is already in use. The shortcut for this program " +
+                    "will not function. (Click on the icon with the mouse to generate a password.)",
+                    ToolTipIcon.Warning);
+            }
         }
 
         public void GenerateAndCopyPassword(string siteName)
@@ -71,7 +91,7 @@ namespace PwLet
 
             MD5 md5Hasher = MD5.Create();
             byte[] data = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(union));
-            
+
             StringBuilder buffer = new StringBuilder();
             for (int i = 0; i < 4; i++)
             {
@@ -80,13 +100,13 @@ namespace PwLet
 
             string hash = buffer.ToString();
             Console.WriteLine("Setting clipboard to '{0}'...", hash);
-            
+
             Clipboard.SetText(hash);
 
             string message;
 
             message = String.Format(
-                "Your password for {0} has been generated and copied to the "+
+                "Your password for {0} has been generated and copied to the " +
                 "clipboard.",
                 siteName);
             this.icon.ShowBalloonTip(0,
@@ -94,8 +114,7 @@ namespace PwLet
                                      message,
                                      ToolTipIcon.None);
         }
-        
-        
+
         void ShowForm()
         {
             if (this.form == null)
@@ -105,7 +124,7 @@ namespace PwLet
 
             this.form.ShowTheWindow();
         }
-        
+
         void FormClosedHandler(object sender, EventArgs e)
         {
             this.form = null;
@@ -123,17 +142,17 @@ namespace PwLet
         {
             ShowForm();
         }
-        
+
         void OptionsMenuItemHandler(object sender, EventArgs e)
         {
             Options.ShowForm();
         }
-        
+
         void ExitMenuItemHandler(object sender, EventArgs e)
         {
             ExitThread();
         }
-            
+
         protected override void ExitThreadCore()
         {
             if (this.form != null)
@@ -144,7 +163,7 @@ namespace PwLet
             {
                 this.hotKey.Dispose();
             }
-            
+
             this.icon.Visible = false;
 
             base.ExitThreadCore();
@@ -156,11 +175,11 @@ namespace PwLet
             try
             {
                 Application.EnableVisualStyles();
- 
+
                 Options.Load();
                 Application.Run(new PasswordApplication());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e);
             }
