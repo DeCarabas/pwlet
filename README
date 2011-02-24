@@ -1,0 +1,30 @@
+This is a small password generator; it generates relatively secure
+passwords for websites and other situations where you do not trust the
+site to keep the password secure. It works as follows: 
+
+1. You give it a master password, which it keeps as a secret.
+
+2. You give it the name of the site or thing you want a password
+   for. The important thing here is that you remember how you picked
+   the name of the site. (e.g., you might decide that you will always
+   remove 'www.', so 'www.github.com' becomes 'github.com'.)
+
+3. It concatenates those two strings with a ':', encodes them in
+   UTF-8, computes the MD5 hash of that byte array, and then converts
+   that byte array to a lowercase hexadecimal representation. (e.g.,
+   the bytes [B5 C4 9A] would become the string "b5c49a".)
+
+4. It puts that string on the clipboard, so it can be pasted into
+   whatever wants the password.
+
+That's it! A new password for each site.
+
+Why MD5? Why hex, not base64 or some other thing? Honestly, it's
+because there was a web page (http://angel.net/~nic/passwd.html) that
+did this first, and this is the scheme they used. By the time I got
+around to writing my own program for this, I had already made enough
+passwords that I just wanted 100% compatibility. The scheme could be
+made more secure, but I'm not trying to foil serious attackers, I'm
+just trying to foil random kiddies. (And I honestly don't actually
+understand the real vulnerabilities against this sort of thing.)
+
