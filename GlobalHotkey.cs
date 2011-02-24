@@ -1,8 +1,8 @@
 namespace PwLet
 {
     using System;
-    using System.Windows.Forms;
     using System.Runtime.InteropServices;
+    using System.Windows.Forms;
 
     [Flags]
     public enum KeyModifiers
@@ -53,13 +53,9 @@ namespace PwLet
         }
 
         [DllImport("user32.dll", PreserveSig = true, SetLastError = true)]
-        private static extern bool RegisterHotKey(IntPtr hWnd,
-                                                  int id,
-                                                  KeyModifiers fsModifiers,
-                                                  Keys vk);
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, KeyModifiers fsModifiers, Keys vk);
 
         [DllImport("user32.dll", PreserveSig = true, SetLastError = true)]
-        private static extern bool UnregisterHotKey(IntPtr hWnd,
-                                                    int id);
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
     }
 }

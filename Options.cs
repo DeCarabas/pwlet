@@ -1,8 +1,6 @@
 namespace PwLet
 {
     using System;
-    using System.Drawing;
-    using System.Drawing.Drawing2D;
     using System.Security.Cryptography;
     using System.Text;
     using System.Windows.Forms;
@@ -19,7 +17,7 @@ namespace PwLet
 
         static bool SavePassword = false;
         static OptionsForm SingletonForm = null;
-        
+
         public static void Load()
         {
             LoadMasterPassword();
@@ -28,7 +26,7 @@ namespace PwLet
                 ShowForm();
             }
         }
-        
+
         public static void ShowForm()
         {
             if (SingletonForm == null)
@@ -45,17 +43,15 @@ namespace PwLet
 
         static void ClearSavedPassword()
         {
-            RegistryKey key;
-            key = Registry.CurrentUser.CreateSubKey(PasswordletKey);
-            using(key)
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(PasswordletKey))
             {
                 Console.WriteLine("Not saving master password...");
 
                 key.DeleteValue(EntropyValue, false);
                 key.DeleteValue(MasterPasswordValue, false);
-            }            
+            }
         }
-        
+
         static void FormCloseHandler(object sender, EventArgs e)
         {
             if (SingletonForm.DialogResult == DialogResult.OK)
@@ -73,7 +69,7 @@ namespace PwLet
                 }
             }
 
-            SingletonForm = null;            
+            SingletonForm = null;
         }
 
         static void LoadMasterPassword()
@@ -81,7 +77,7 @@ namespace PwLet
             RegistryKey key = Registry.CurrentUser.OpenSubKey(PasswordletKey);
             if (key != null)
             {
-                using(key)
+                using (key)
                 {
                     byte[] entropy = key.GetValue(EntropyValue, null) as byte[];
                     byte[] encryptedData = key.GetValue(MasterPasswordValue,
@@ -89,12 +85,8 @@ namespace PwLet
                     if (encryptedData != null)
                     {
                         Console.WriteLine("Decrypting master password...");
-                        
-                        byte[] data = ProtectedData.Unprotect(
-                            encryptedData,
-                            entropy,
-                            DataProtectionScope.CurrentUser);
 
+                        byte[] data = ProtectedData.Unprotect(encryptedData, entropy, DataProtectionScope.CurrentUser);
                         MasterPassword = Encoding.UTF8.GetString(data);
 
                         // If we found a password in the registry,
@@ -106,28 +98,22 @@ namespace PwLet
                 }
             }
         }
-        
+
         static void SaveMasterPassword()
         {
             byte[] data = Encoding.UTF8.GetBytes(MasterPassword);
             byte[] entropy = new byte[16];
-                
+
             new Random().NextBytes(entropy);
 
-            byte[] encryptedData = ProtectedData.Protect(
-                data,
-                entropy,
-                DataProtectionScope.CurrentUser);
-
-            RegistryKey key;
-            key = Registry.CurrentUser.CreateSubKey(PasswordletKey);
-            using(key)
+            byte[] encryptedData = ProtectedData.Protect(data, entropy, DataProtectionScope.CurrentUser);
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(PasswordletKey))
             {
                 Console.WriteLine("Saving master password...");
 
                 key.SetValue(EntropyValue, entropy);
                 key.SetValue(MasterPasswordValue, encryptedData);
             }
-        }        
+        }
     }
 }

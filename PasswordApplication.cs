@@ -2,11 +2,10 @@ namespace PwLet
 {
     using System;
     using System.Drawing;
-    using System.Drawing.Drawing2D;
+    using System.Runtime.InteropServices;
     using System.Security.Cryptography;
     using System.Text;
     using System.Windows.Forms;
-    using System.Runtime.InteropServices;
 
     class PasswordApplication : ApplicationContext
     {
@@ -23,8 +22,7 @@ namespace PwLet
             {
                 if (applicationIcon == null)
                 {
-                    applicationIcon = Icon.ExtractAssociatedIcon(
-                        typeof(PasswordApplication).Assembly.Location);
+                    applicationIcon = Icon.ExtractAssociatedIcon(typeof(PasswordApplication).Assembly.Location);
                 }
 
                 return applicationIcon;

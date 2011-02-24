@@ -1,19 +1,12 @@
 namespace PwLet
 {
     using System;
-    using System.Drawing;
-    using System.Drawing.Drawing2D;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Windows.Forms;
 
-    using Microsoft.Win32;
-    
     class OptionsForm : Form
     {
-        
-        TextBox passwordBox = null;
-        CheckBox savePassword = null;
+        readonly TextBox passwordBox = null;
+        readonly CheckBox savePassword = null;
         
         public OptionsForm()
         {            
