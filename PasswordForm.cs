@@ -19,14 +19,15 @@ namespace PwLet
         static ProfessionalColorTable ColorTable = new ProfessionalColorTable();
 
         PasswordApplication application;
-        TextBox siteName = new TextBox();
-        Label label = new Label();
-        
+        readonly TextBox siteName = new TextBox();
+        readonly Label label = new Label();
+        readonly CheckBox oldStyleCheck;
+
         public PasswordForm(PasswordApplication application)
         {
             this.application = application;
             
-            this.Width = 350;
+            this.Width = 420;
             this.Height = 50;
             this.KeyPreview = true;
             this.Deactivate += DeactivateHandler;
@@ -54,12 +55,34 @@ namespace PwLet
             AlignVertical(label);
             this.Controls.Add(this.label);
 
-            this.siteName.Top = 10;
             this.siteName.Left = 85;
             this.siteName.Width = 245;
             this.siteName.Font = Fonts.Segoe;
+            this.siteName.TextChanged += OnSiteChanged;
             AlignVertical(this.siteName);
             this.Controls.Add(this.siteName);
+
+            this.oldStyleCheck = AlignVertical(new CheckBox
+            {
+                Left = this.siteName.Right + 10,
+                Text = "Use v1",
+                Font = Fonts.SegoeItalic,
+                BackColor = Color.Transparent,                
+            });
+            this.Controls.Add( this.oldStyleCheck );
+        }
+
+        void OnSiteChanged( object sender, EventArgs e )
+        {
+            int? version = Options.GetStoredVersion( this.siteName.Text );
+            if ( version != null )
+            {
+                this.oldStyleCheck.Checked = ( version.Value == 1 );
+            }
+            else
+            {
+                this.oldStyleCheck.Checked = false;
+            }
         }
 
         TaskbarLocation GetTaskbarLocation()
@@ -139,9 +162,7 @@ namespace PwLet
             // const int SPP_PLACESLIST = 6;
             const int SPP_NSCHOST = 13;
             
-            return new VisualStyleRenderer("STARTPANEL",
-                                           SPP_NSCHOST,
-                                           1);
+            return new VisualStyleRenderer("STARTPANEL", SPP_NSCHOST, 1);
         }
         
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -167,7 +188,7 @@ namespace PwLet
                                       Border3DStyle.Raised);
             
             base.OnPaint(e);
-        }
+        }        
 
         public void ShowTheWindow()
         {
@@ -183,9 +204,7 @@ namespace PwLet
             if (Clipboard.ContainsText())
             {
                 Uri uri = null;
-                if (Uri.TryCreate(Clipboard.GetText(),
-                                  UriKind.Absolute,
-                                  out uri))
+                if (Uri.TryCreate(Clipboard.GetText(), UriKind.Absolute, out uri))
                 {
                     this.siteName.Text = uri.Authority;
                 }
@@ -209,15 +228,18 @@ namespace PwLet
             }
             else if (e.KeyChar == (char)Keys.Enter)
             {
-                this.application.GenerateAndCopyPassword(this.siteName.Text);
+                int version = this.oldStyleCheck.Checked ? 1 : 2;
+
+                this.application.GenerateAndCopyPassword(this.siteName.Text, version);
                 this.Hide();
                 e.Handled = true;
             }
         }
         
-        void AlignVertical(Control control)
+        T AlignVertical<T>(T control) where T : Control
         {
             control.Top = (this.Height / 2) - (control.Height / 2);
+            return control;
         }
     }
 }
